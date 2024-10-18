@@ -80,3 +80,17 @@
 ### 异常检测
 
 ## 强化学习
+
+## Jupyter Notebook
+
+## 术语
+
+- 数据集 dataset：用于训练模型的数据
+- 特征（输入特征）feature：数据集中的输入变量 x
+- 标签（输出标签）output variable，target variable：数据集中的输出变量 y
+- 训练总数 number of training examples：数据集中训练样本的数量 m
+- 训练示例 training example：数据集中的单个数据点（x, y）
+- 训练集：用于训练模型的数据集
+- 测试集：用于评估模型的数据集
+- 损失函数：衡量模型预测结果与实际结果之间差异的函数
+- 优化器：用于调整模型参数以最小化损失函数的算法
