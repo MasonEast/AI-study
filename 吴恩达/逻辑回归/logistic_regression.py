@@ -87,15 +87,11 @@ def gradient(theta, X, y):
     theta = np.matrix(theta)
     X = np.matrix(X)
     y = np.matrix(y).T
-    print("X.shape = ", X.shape)
-    print("y.shape = ", y.shape)
-    print("theta.shape = ", theta.shape)
     
     parameters = int(theta.ravel().shape[1])
     grad = np.zeros(parameters)
     
     error = sigmoid(X @ theta.T) - y
-    print("error.shape = ", error.shape)
     
     for i in range(parameters):
         term = X[:,i].T @ error
