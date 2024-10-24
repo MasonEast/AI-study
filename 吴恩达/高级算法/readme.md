@@ -25,6 +25,27 @@
 
 ### tensorflow
 
+#### 激活函数（activation function）
+
+- sigmoid
+- linear
+- ReLU
+- softmax
+
+#### 损失函数（loss function）
+
+- 交叉熵损失函数（cross entropy loss）
+- 均方误差损失函数（mean squared error loss）
+- sparse categorical cross entropy loss
+
+#### 优化器（optimizer）
+
+- 随机梯度下降（stochastic gradient descent）
+- Adam
+- RMSprop
+
+#### 模型评估
+
 #### 梯度下降
 
 #### 梯度下降优化
