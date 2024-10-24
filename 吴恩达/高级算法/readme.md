@@ -41,7 +41,7 @@
 #### 优化器（optimizer）
 
 - 随机梯度下降（stochastic gradient descent）
-- Adam
+- Adam（自动调整学习率 alpha
 - RMSprop
 
 #### 模型评估
