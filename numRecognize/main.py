@@ -34,11 +34,43 @@ class MNISTNN(nn.Module):
             #     [135, 2, ..., 146],
             # ]
 
-            nn.Linear(28 * 28, 512),  # 输入为28*28长度的张量，代表每个像素的灰度值的特征，输出为512长度的张量，代表每个像素的灰度值的特征（神经元）
-            nn.GELU(), # GELU是ReLU激活函数的增强版，其作用是在输出结果为负数的时候有一定的弧度，而不像ReLU一样直接为0，能够更好帮助我们完成梯度下降
+            # --------------------------- p1 --------------------------- # 该方法训练准确率在97 ~ 98之间
+            # nn.Linear(28 * 28, 512),  # 输入为28*28长度的张量，代表每个像素的灰度值的特征，输出为512长度的张量，代表每个像素的灰度值的特征（神经元）
+            # nn.GELU(), # GELU是ReLU激活函数的增强版，其作用是在输出结果为负数的时候有一定的弧度，而不像ReLU一样直接为0，能够更好帮助我们完成梯度下降
+
+            # nn.Linear(512, 512),
+            # nn.GELU(),
+
+            # nn.Linear(512, 10),
+
+            # --------------------------- p2 --------------------------- # 该方法训练准确率在98 ~ 98.2之间
+            # nn.Linear(28 * 28, 1024),  # 增加隐藏层的神经元数量
+            # nn.GELU(),
+            # nn.Linear(1024, 512),
+            # nn.GELU(),
+            # nn.Linear(512, 256),
+            # nn.GELU(),
+            # nn.Linear(256, 10),
+            
+            # --------------------------- p3 --------------------------- # 该方法训练准确率在98 ~ 98.2之间
+            # nn.Linear(28 * 28, 1024),  # 增加隐藏层的神经元数量
+            # nn.BatchNorm1d(1024), # 添加批归一化层，可以加速训练过程，防止梯度消失
+            # nn.GELU(),
+            # nn.Linear(1024, 512),
+            # nn.BatchNorm1d(512),
+            # nn.GELU(),
+            # nn.Linear(512, 256),
+            # nn.BatchNorm1d(256),
+            # nn.GELU(),
+            # nn.Linear(256, 10),
+
+            # --------------------------- p4 --------------------------- # 该方法训练准确率在98 ~ 98.2之间
+            nn.Linear(28 * 28, 512),  
+            nn.GELU(), 
 
             nn.Linear(512, 512),
             nn.GELU(),
+            nn.Dropout(0.5), # 添加dropout层，防止过拟合
 
             nn.Linear(512, 10),
         )
@@ -54,7 +86,7 @@ def train(*, model, data_loader, loss_fn, optimizer):
         loss = loss_fn(pred, y) # 计算损失
        
         loss.backward() # 进行反向传播，计算损失相对于模型参数的梯度。这个过程是自动进行的，由PyTorch根据前向传播计算图自动管理梯度计算。
-        
+
         optimizer.step() # 根据计算出的梯度对模型参数进行调整，以尽量减小损失。
 
         optimizer.zero_grad() # 将梯度清零，防止因为梯度累积造成优化的时候用力过猛
@@ -82,7 +114,7 @@ def test(*, model, data_loader, loss_fn, optimizer):
 myNN = MNISTNN().to(device) # 将模型放到GPU上
 opti = torch.optim.Adam(myNN.parameters(), lr=1e-3) # 使用adam函数更新参数
 loss_fn = nn.CrossEntropyLoss() # 使用交叉熵损失函数
-epochs = 3
+epochs = 10
 for epoch in range(epochs):
     print(f"Epoch {epoch+1}/{epochs}")
     train(model=myNN, data_loader=training_dataLoader, loss_fn=loss_fn, optimizer=opti)
