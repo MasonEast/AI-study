@@ -17,8 +17,8 @@ def loadImg(path):
 
 imgs = [(0, loadImg('0.png')),
         (1, loadImg('1.png')),
-        # (3, loadImg('3.png')),
-        # (4, loadImg('4.png')),
+        (3, loadImg('3.png')),
+        (4, loadImg('4.png')),
         (5, loadImg('5.png')),
         (7, loadImg('7.png')),
         (8, loadImg('8.png')),
