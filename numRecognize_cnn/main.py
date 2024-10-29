@@ -24,7 +24,7 @@ test_dataLoader = DataLoader(test_data, batch_size=batch_size, shuffle=True, gen
 
 class MNISTCNN(nn.Module):
     def __init__(self):
-        super(MNISTCNN, self).__init__()
+        super().__init__()
 
         # 第一个卷积层
         self.conv1 = nn.Conv2d(in_channels=1, out_channels=32, kernel_size=3, stride=1, padding=1) # 1表示输入通道数，32表示输出通道数，3表示卷积核大小，1表示步长，padding表示填充
@@ -98,11 +98,17 @@ def test(*, model, data_loader, loss_fn, optimizer):
             print(f'Test loss: {test_loss/num_batches}')
             print(f"Test Accuracy: {100*correct/size}%")
 
-myNN = MNISTCNN().to(device) # 将模型放到GPU上
-opti = torch.optim.Adam(myNN.parameters(), lr=1e-3) # 使用adam函数更新参数
+myCNN = MNISTCNN().to(device) # 将模型放到GPU上
+opti = torch.optim.Adam(myCNN.parameters(), lr=1e-3) # 使用adam函数更新参数
 loss_fn = nn.CrossEntropyLoss() # 使用交叉熵损失函数
 epochs = 10
 for epoch in range(epochs):
     print(f"Epoch {epoch+1}/{epochs}")
-    train(model=myNN, data_loader=training_dataLoader, loss_fn=loss_fn, optimizer=opti)
-    test(model=myNN, data_loader=test_dataLoader, loss_fn=loss_fn, optimizer=opti)
+    train(model=myCNN, data_loader=training_dataLoader, loss_fn=loss_fn, optimizer=opti)
+    test(model=myCNN, data_loader=test_dataLoader, loss_fn=loss_fn, optimizer=opti)
+
+# 保存模型的状态字典， 推荐使用第一种方法。虽然需要在加载时重新定义模型结构，但它更加灵活，并避免了与特定 PyTorch 版本的绑定问题。只保存模型的权重通常也可以实现更大的兼容性和重新训练的能力。
+torch.save(myCNN.state_dict(), 'model.pth')
+
+# 保存整个模型
+torch.save(myCNN, 'model_complete.pth')
