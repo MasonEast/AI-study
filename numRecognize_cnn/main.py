@@ -82,7 +82,7 @@ def train(*, model, data_loader, loss_fn, optimizer):
 def test(*, model, data_loader, loss_fn, optimizer):
         size = len(data_loader.dataset)
         num_batches = len(data_loader)
-        model.eval()
+        model.eval() # 将模型设置为评估模式
         test_loss, correct = 0, 0
        
         with torch.no_grad(): # 不计算梯度，节省内存
