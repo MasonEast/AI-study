@@ -3,6 +3,7 @@ from torch import nn
 from torch.utils.data import DataLoader
 from torchvision import datasets
 from torchvision.transforms import ToTensor
+import torch.nn.functional as F
 
 training_data = datasets.MNIST(root='./data', train=True, transform=ToTensor(), download=True)
 test_data = datasets.MNIST(root='./data', train=False, transform=ToTensor(), download=True)
@@ -21,65 +22,46 @@ batch_size = 100
 training_dataLoader = DataLoader(training_data, batch_size=batch_size, shuffle=True, generator=torch.Generator(device=device))
 test_dataLoader = DataLoader(test_data, batch_size=batch_size, shuffle=True, generator=torch.Generator(device=device))
 
-class MNISTNN(nn.Module):
+class MNISTCNN(nn.Module):
     def __init__(self):
-        super().__init__()
-        self.network = nn.Sequential( # 容器模块，用于将多个神经网络层按顺序组合在一起
-            nn.Flatten(), # 我们首先需要将二维的图片压平,MNIST是一个28*28的黑白图片, 二维的图片是（28,28）的矩阵，压平后就是（784,）的向量
-            # [
-            #     [255, 2, ..., 233],
-            #     .
-            #     . .                                ->        [255, 2, ..., 146]
-            #     .
-            #     [135, 2, ..., 146],
-            # ]
+        super(MNISTCNN, self).__init__()
 
-            # --------------------------- p1 --------------------------- # 该方法训练准确率在97 ~ 98之间
-            # nn.Linear(28 * 28, 512),  # 输入为28*28长度的张量，代表每个像素的灰度值的特征，输出为512长度的张量，代表每个像素的灰度值的特征（神经元）
-            # nn.GELU(), # GELU是ReLU激活函数的增强版，其作用是在输出结果为负数的时候有一定的弧度，而不像ReLU一样直接为0，能够更好帮助我们完成梯度下降
-
-            # nn.Linear(512, 512),
-            # nn.GELU(),
-
-            # nn.Linear(512, 10),
-
-            # --------------------------- p2 --------------------------- # 该方法训练准确率在98 ~ 98.2之间
-            # nn.Linear(28 * 28, 1024),  # 增加隐藏层的神经元数量
-            # nn.GELU(),
-            # nn.Linear(1024, 512),
-            # nn.GELU(),
-            # nn.Linear(512, 256),
-            # nn.GELU(),
-            # nn.Linear(256, 10),
-            
-            # --------------------------- p3 --------------------------- # 该方法训练准确率在98 ~ 98.2之间
-            # nn.Linear(28 * 28, 1024),  # 增加隐藏层的神经元数量
-            # nn.BatchNorm1d(1024), # 添加批归一化层，可以加速训练过程，防止梯度消失
-            # nn.GELU(),
-            # nn.Linear(1024, 512),
-            # nn.BatchNorm1d(512),
-            # nn.GELU(),
-            # nn.Linear(512, 256),
-            # nn.BatchNorm1d(256),
-            # nn.GELU(),
-            # nn.Linear(256, 10),
-
-            # --------------------------- p4 --------------------------- # 该方法训练准确率在98 ~ 98.2之间
-            nn.Linear(28 * 28, 512),  
-            nn.GELU(), 
-
-            nn.Linear(512, 512),
-            nn.GELU(),
-            nn.Dropout(0.5), # 添加dropout层，防止过拟合
-
-            nn.Linear(512, 10),
-        )
+        # 第一个卷积层
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=32, kernel_size=3, stride=1, padding=1) # 1表示输入通道数，32表示输出通道数，3表示卷积核大小，1表示步长，padding表示填充
+        self.bn1 = nn.BatchNorm2d(32) # 归一化层
+        
+        # 第二个卷积层
+        self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, stride=1, padding=1)
+        self.bn2 = nn.BatchNorm2d(64)
+        
+        # 池化层
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2, padding=0) # kernel_size表示池化窗口大小，stride表示步长，padding表示填充
+        
+        # 全连接层
+        self.fc1 = nn.Linear(64 * 7 * 7, 512)
+        self.fc2 = nn.Linear(512, 10)
+        
     def forward(self, x):
-        x = self.network(x)
-        print(f'Shape after flatten: {x.shape}')
+        # 应用第一个卷积层，后接GELU激活和池化层
+        x = self.pool(F.gelu(self.bn1(self.conv1(x))))
+        
+        # 应用第二个卷积层，后接GELU激活和池化层
+        x = self.pool(F.gelu(self.bn2(self.conv2(x))))
+        
+        # 这里打印张量形状以确定尺寸是正确的
+        # print(f'Shape before flatten: {x.shape}')
+
+        # 展平操作
+        x = x.view(batch_size, -1)
+
+        # print(f'Shape after flatten: {x.shape}')
+        
+        # 应用全连接层和激活函数
+        x = F.gelu(self.fc1(x))
+        x = self.fc2(x)
 
         return x
-
+    
 def train(*, model, data_loader, loss_fn, optimizer):
     size = len(data_loader.dataset) # 获取数据集的大小
     model.train() # 将模型设置为训练模式
@@ -88,11 +70,13 @@ def train(*, model, data_loader, loss_fn, optimizer):
         pred = model(x) # 前向传播，计算预测值pred。调用model(x)会应用模型的当前参数去进行计算
         loss = loss_fn(pred, y) # 计算损失
        
+        optimizer.zero_grad() # 将梯度清零，防止因为梯度累积造成优化的时候用力过猛
+
         loss.backward() # 进行反向传播，计算损失相对于模型参数的梯度。这个过程是自动进行的，由PyTorch根据前向传播计算图自动管理梯度计算。
 
         optimizer.step() # 根据计算出的梯度对模型参数进行调整，以尽量减小损失。
 
-        optimizer.zero_grad() # 将梯度清零，防止因为梯度累积造成优化的时候用力过猛
+        
        
         if batch % 100 == 0:   # 每训练100个batch，打印一次损失
             loss, current = loss.item(), batch * len(x)    # 计算当前损失
@@ -114,7 +98,7 @@ def test(*, model, data_loader, loss_fn, optimizer):
             print(f'Test loss: {test_loss/num_batches}')
             print(f"Test Accuracy: {100*correct/size}%")
 
-myNN = MNISTNN().to(device) # 将模型放到GPU上
+myNN = MNISTCNN().to(device) # 将模型放到GPU上
 opti = torch.optim.Adam(myNN.parameters(), lr=1e-3) # 使用adam函数更新参数
 loss_fn = nn.CrossEntropyLoss() # 使用交叉熵损失函数
 epochs = 10
