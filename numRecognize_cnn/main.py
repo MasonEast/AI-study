@@ -49,10 +49,9 @@ class MNISTCNN(nn.Module):
         x = self.pool(F.gelu(self.bn2(self.conv2(x))))
         
         # 这里打印张量形状以确定尺寸是正确的
-        # print(f'Shape before flatten: {x.shape}')
 
         # 展平操作
-        x = x.view(batch_size, -1)
+        x = x.view(x.shape[0], -1)
 
         # print(f'Shape after flatten: {x.shape}')
         
@@ -75,8 +74,6 @@ def train(*, model, data_loader, loss_fn, optimizer):
         loss.backward() # 进行反向传播，计算损失相对于模型参数的梯度。这个过程是自动进行的，由PyTorch根据前向传播计算图自动管理梯度计算。
 
         optimizer.step() # 根据计算出的梯度对模型参数进行调整，以尽量减小损失。
-
-        
        
         if batch % 100 == 0:   # 每训练100个batch，打印一次损失
             loss, current = loss.item(), batch * len(x)    # 计算当前损失
@@ -98,17 +95,19 @@ def test(*, model, data_loader, loss_fn, optimizer):
             print(f'Test loss: {test_loss/num_batches}')
             print(f"Test Accuracy: {100*correct/size}%")
 
-myCNN = MNISTCNN().to(device) # 将模型放到GPU上
-opti = torch.optim.Adam(myCNN.parameters(), lr=1e-3) # 使用adam函数更新参数
-loss_fn = nn.CrossEntropyLoss() # 使用交叉熵损失函数
-epochs = 10
-for epoch in range(epochs):
-    print(f"Epoch {epoch+1}/{epochs}")
-    train(model=myCNN, data_loader=training_dataLoader, loss_fn=loss_fn, optimizer=opti)
-    test(model=myCNN, data_loader=test_dataLoader, loss_fn=loss_fn, optimizer=opti)
+if __name__ == '__main__':
 
-# 保存模型的状态字典， 推荐使用第一种方法。虽然需要在加载时重新定义模型结构，但它更加灵活，并避免了与特定 PyTorch 版本的绑定问题。只保存模型的权重通常也可以实现更大的兼容性和重新训练的能力。
-torch.save(myCNN.state_dict(), 'model.pth')
+    myCNN = MNISTCNN().to(device) # 将模型放到GPU上
+    opti = torch.optim.Adam(myCNN.parameters(), lr=1e-3) # 使用adam函数更新参数
+    loss_fn = nn.CrossEntropyLoss() # 使用交叉熵损失函数
+    epochs = 10
+    for epoch in range(epochs):
+        print(f"Epoch {epoch+1}/{epochs}")
+        train(model=myCNN, data_loader=training_dataLoader, loss_fn=loss_fn, optimizer=opti)
+        test(model=myCNN, data_loader=test_dataLoader, loss_fn=loss_fn, optimizer=opti)
 
-# 保存整个模型
-torch.save(myCNN, 'model_complete.pth')
+    # 保存模型的状态字典， 推荐使用第一种方法。虽然需要在加载时重新定义模型结构，但它更加灵活，并避免了与特定 PyTorch 版本的绑定问题。只保存模型的权重通常也可以实现更大的兼容性和重新训练的能力。
+    torch.save(myCNN.state_dict(), 'model.pth')
+
+    # 保存整个模型
+    torch.save(myCNN, 'model_complete.pth')

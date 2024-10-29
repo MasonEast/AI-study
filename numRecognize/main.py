@@ -115,10 +115,12 @@ def test(*, model, data_loader, loss_fn, optimizer):
             print(f"Test Accuracy: {100*correct/size}%")
 
 myNN = MNISTNN().to(device) # 将模型放到GPU上
-opti = torch.optim.Adam(myNN.parameters(), lr=1e-3) # 使用adam函数更新参数
-loss_fn = nn.CrossEntropyLoss() # 使用交叉熵损失函数
-epochs = 10
-for epoch in range(epochs):
-    print(f"Epoch {epoch+1}/{epochs}")
-    train(model=myNN, data_loader=training_dataLoader, loss_fn=loss_fn, optimizer=opti)
-    test(model=myNN, data_loader=test_dataLoader, loss_fn=loss_fn, optimizer=opti)
+if __name__ == '__main__':
+    
+    opti = torch.optim.Adam(myNN.parameters(), lr=1e-3) # 使用adam函数更新参数
+    loss_fn = nn.CrossEntropyLoss() # 使用交叉熵损失函数
+    epochs = 10
+    for epoch in range(epochs):
+        print(f"Epoch {epoch+1}/{epochs}")
+        train(model=myNN, data_loader=training_dataLoader, loss_fn=loss_fn, optimizer=opti)
+        test(model=myNN, data_loader=test_dataLoader, loss_fn=loss_fn, optimizer=opti)
